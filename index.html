@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pay for Nothing — nothing. now with ai.</title>
+  <meta name="description" content="No product. No service. No promise. Just you, your money, and the void.">
+  <meta property="og:title" content="Pay for Nothing">
+  <meta property="og:description" content="nothing. now with ai.">
+  <meta property="og:url" content="https://payfornothing.store">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+
+  <style>
+    /* ─────────────────────────────────────────
+       CONFIG — edit these colours to retheme
+    ───────────────────────────────────────── */
+    :root {
+      --bg:        #0a0a0a;
+      --surface:   #111110;
+      --border:    #2e2c29;
+      --border2:   #1a1814;
+      --gold:      #c9b99a;
+      --gold-hi:   #e8d8b8;
+      --text:      #e8e4d9;
+      --muted:     #6b6560;
+      --ghost:     #3a3836;
+      --faint:     #3e3c38;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { font-size: 16px; }
+
+    body {
+      font-family: 'DM Mono', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.25rem;
+    }
+
+    /* ── Layout ── */
+    .wrap { max-width: 440px; width: 100%; text-align: center; }
+
+    /* ── Header ── */
+    .brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 11px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .moto {
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      color: var(--ghost);
+      margin-bottom: 3rem;
+      text-transform: lowercase;
+    }
+
+    /* ── Hero ── */
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 6vw, 2.9rem);
+      font-weight: 400;
+      line-height: 1.15;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+    h1 em { font-style: italic; color: var(--gold); }
+
+    .sub {
+      font-size: 11px;
+      letter-spacing: 0.13em;
+      color: var(--muted);
+      margin-bottom: 2.5rem;
+      line-height: 2;
+    }
+
+    /* ── Form labels ── */
+    .field-label {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-align: left;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    /* ── Inputs ── */
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      background: transparent;
+      border: 0.5px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      padding: 12px 14px;
+      border-radius: 4px;
+      outline: none;
+      letter-spacing: 0.05em;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus { border-color: var(--muted); }
+    input::placeholder { color: var(--faint); }
+    select { cursor: pointer; }
+    select option { background: #1a1814; }
+
+    .name-wrap { margin-bottom: 12px; }
+
+    /* ── 2-col row ── */
+    .row2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    /* ── Qty stepper ── */
+    .qty-wrap {
+      display: flex;
+      align-items: center;
+      border: 0.5px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      height: 44px;
+    }
+    .qty-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 18px;
+      padding: 0 14px;
+      cursor: pointer;
+      height: 100%;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .qty-btn:hover { color: var(--text); background: #1a1814; }
+    .qty-val {
+      flex: 1;
+      text-align: center;
+      font-size: 14px;
+      color: var(--text);
+      line-height: 44px;
+      border-left: 0.5px solid var(--border);
+      border-right: 0.5px solid var(--border);
+      user-select: none;
+    }
+
+    /* ── Amount buttons ── */
+    .amounts {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .amt {
+      background: transparent;
+      border: 0.5px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      padding: 12px 8px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s;
+      letter-spacing: 0.05em;
+    }
+    .amt:hover, .amt.active {
+      background: #1a1814;
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    .custom-wrap { margin-bottom: 12px; }
+
+    /* ── Preview total ── */
+    .preview {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 16px;
+      padding: 0 2px;
+      letter-spacing: 0.05em;
+    }
+    .preview .preview-total { color: var(--gold); }
+
+    /* ── Pay button ── */
+    .pay-btn {
+      width: 100%;
+      background: var(--gold);
+      border: none;
+      color: var(--bg);
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.22em;
+      padding: 16px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .pay-btn:hover:not(:disabled) { background: var(--gold-hi); }
+    .pay-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .spinner {
+      width: 14px; height: 14px;
+      border: 1.5px solid rgba(10,10,10,0.25);
+      border-top-color: var(--bg);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none; flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .disclaimer {
+      font-size: 10px;
+      color: var(--faint);
+      letter-spacing: 0.08em;
+      line-height: 2;
+    }
+
+    /* ─────────────────────────────────────────
+       RECEIPT
+    ───────────────────────────────────────── */
+    .receipt {
+      display: none;
+      border: 0.5px solid var(--border);
+      border-radius: 4px;
+      padding: 2rem 1.75rem;
+      margin-top: 1rem;
+      text-align: left;
+      animation: fadeIn 0.5s ease;
+    }
+    .receipt.show { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    .rcpt-brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 15px;
+      text-align: center;
+      color: var(--text);
+      margin-bottom: 2px;
+      letter-spacing: 0.06em;
+    }
+    .rcpt-moto {
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      color: var(--ghost);
+      text-align: center;
+      margin-bottom: 1.75rem;
+      text-transform: lowercase;
+    }
+
+    .rcpt-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 11px;
+      padding: 6px 0;
+      border-bottom: 0.5px solid var(--border2);
+      letter-spacing: 0.04em;
+      gap: 16px;
+    }
+    .rcpt-row span:first-child { color: var(--muted); flex-shrink: 0; }
+    .rcpt-row span:last-child  { text-align: right; }
+
+    .rcpt-divider {
+      border: none;
+      border-top: 0.5px solid var(--border);
+      margin: 10px 0;
+    }
+
+    .rcpt-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      padding: 5px 0;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+
+    .rcpt-total {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      padding: 12px 0 0;
+      color: var(--gold);
+      border-top: 0.5px solid var(--border);
+      margin-top: 6px;
+      letter-spacing: 0.06em;
+      font-weight: 400;
+    }
+
+    .cert {
+      font-family: 'Playfair Display', serif;
+      font-size: 11px;
+      font-style: italic;
+      text-align: center;
+      color: var(--muted);
+      margin-top: 1.75rem;
+      line-height: 1.9;
+      border-top: 0.5px solid var(--border2);
+      padding-top: 1.75rem;
+    }
+
+    /* ── AI joke block ── */
+    .ai-block {
+      margin-top: 1.5rem;
+      border-top: 0.5px solid var(--border2);
+      padding-top: 1.5rem;
+      text-align: center;
+    }
+    .ai-joke {
+      font-size: 12px;
+      color: var(--text);
+      line-height: 1.75;
+      min-height: 38px;
+      letter-spacing: 0.03em;
+    }
+    .ai-joke.loading {
+      color: var(--ghost);
+      letter-spacing: 0.14em;
+      font-size: 10px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.2} }
+    .ai-credit {
+      font-size: 9px;
+      color: #252320;
+      margin-top: 8px;
+      letter-spacing: 0.14em;
+    }
+
+    .fine {
+      font-size: 9px;
+      color: #1e1c1a;
+      text-align: center;
+      margin-top: 1.25rem;
+      letter-spacing: 0.1em;
+      line-height: 1.8;
+    }
+
+    .again-btn {
+      width: 100%;
+      background: transparent;
+      border: 0.5px solid var(--border);
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      padding: 11px;
+      cursor: pointer;
+      border-radius: 4px;
+      margin-top: 1.5rem;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+    .again-btn:hover { border-color: var(--muted); color: var(--text); }
+
+    /* ── Footer ── */
+    footer {
+      margin-top: 3rem;
+      font-size: 10px;
+      color: #252320;
+      letter-spacing: 0.1em;
+      text-align: center;
+      line-height: 2;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 400px) {
+      .amounts { grid-template-columns: repeat(2, 1fr); }
+      .row2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <p class="brand">nothing, inc.</p>
+  <p class="moto">nothing. now with ai.</p>
+
+  <!-- ══════════════ MAIN FORM ══════════════ -->
+  <div id="main">
+
+    <h1>Pay for<br><em>absolutely nothing.</em></h1>
+    <p class="sub">No product. No service. No promise.<br>Just you, your money, and the void.</p>
+
+    <!-- Name -->
+    <div class="name-wrap">
+      <label class="field-label" for="nameInput">Your name</label>
+      <input type="text" id="nameInput" placeholder="so we know who to thank for nothing" autocomplete="given-name">
+    </div>
+
+    <!-- Quantity + Tax -->
+    <div class="row2">
+      <div>
+        <label class="field-label">Quantity</label>
+        <div class="qty-wrap">
+          <button class="qty-btn" onclick="changeQty(-1)" aria-label="Decrease">−</button>
+          <div class="qty-val" id="qtyVal">1</div>
+          <button class="qty-btn" onclick="changeQty(1)" aria-label="Increase">+</button>
+        </div>
+      </div>
+      <div>
+        <label class="field-label" for="taxSelect">Tax for Nothing</label>
+        <select id="taxSelect" onchange="updatePreview()">
+          <option value="0">No tax (lucky you)</option>
+          <option value="0.05">5% — modest nothing</option>
+          <option value="0.085" selected>8.5% — standard</option>
+          <option value="0.13">13% — premium void</option>
+          <option value="0.20">20% — European nothing</option>
+          <option value="0.25">25% — Scandinavian nothing</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Fixed amounts -->
+    <div class="amounts">
+      <button class="amt active" data-val="1">$1</button>
+      <button class="amt" data-val="5">$5</button>
+      <button class="amt" data-val="20">$20</button>
+      <button class="amt" data-val="50">$50</button>
+    </div>
+
+    <!-- Custom amount -->
+    <div class="custom-wrap">
+      <input type="number" id="customAmt" placeholder="or enter a custom amount per unit" min="0.01" step="0.01">
+    </div>
+
+    <!-- Preview -->
+    <div class="preview">
+      <span id="previewLabel">1 × $1.00 + tax</span>
+      <span class="preview-total" id="previewTotal">$1.09</span>
+    </div>
+
+    <!-- CTA -->
+    <button class="pay-btn" id="payBtn" onclick="handlePay()">
+      <div class="spinner" id="spinner"></div>
+      <span id="btnText">Pay for Nothing &rarr;</span>
+    </button>
+
+    <p class="disclaimer">
+      You will receive nothing.<br>
+      This is not a mistake. No refunds — obviously.
+    </p>
+
+  </div><!-- /main -->
+
+  <!-- ══════════════ RECEIPT ══════════════ -->
+  <div class="receipt" id="receipt">
+
+    <p class="rcpt-brand">nothing, inc.</p>
+    <p class="rcpt-moto">nothing. now with ai.</p>
+
+    <div class="rcpt-row"><span>Item</span><span>Nothing</span></div>
+    <div class="rcpt-row"><span>Recipient</span><span id="r-name">—</span></div>
+    <div class="rcpt-row"><span>Description</span><span>—</span></div>
+    <div class="rcpt-row"><span>Delivery</span><span>Not applicable</span></div>
+    <div class="rcpt-row"><span>Contents</span><span>None</span></div>
+    <div class="rcpt-row"><span>Refunds</span><span>Obviously not</span></div>
+    <div class="rcpt-row"><span>Satisfaction</span><span>Guaranteed*</span></div>
+
+    <hr class="rcpt-divider">
+
+    <div class="rcpt-line"><span id="r-qty-label">Nothing (×1)</span><span id="r-subtotal">$1.00</span></div>
+    <div class="rcpt-line" id="taxLine"><span id="r-tax-label">Tax for Nothing (8.5%)</span><span id="r-tax-amt">$0.09</span></div>
+
+    <div class="rcpt-total">
+      <span>Total paid for nothing</span>
+      <span id="r-total">$1.09</span>
+    </div>
+
+    <div class="cert">
+      This certifies that you have willingly exchanged<br>
+      real money for nothing whatsoever.<br><br>
+      We are as surprised as you are.
+    </div>
+
+    <div class="ai-block">
+      <p class="ai-joke loading" id="aiJoke">one moment...</p>
+      <p class="ai-credit" id="aiCredit"></p>
+    </div>
+
+    <p class="fine">
+      *satisfaction not guaranteed &nbsp;·&nbsp;
+      tax for nothing is non-refundable &nbsp;·&nbsp;
+      nothing, inc. is not liable for nothing
+    </p>
+
+    <button class="again-btn" onclick="reset()">buy more nothing</button>
+
+  </div><!-- /receipt -->
+
+</div><!-- /wrap -->
+
+<footer>
+  &copy; nothing, inc. &nbsp;·&nbsp; payfornothing.store &nbsp;·&nbsp; all rights reserved, nothing delivered
+</footer>
+
+<!-- ══════════════ SCRIPT ══════════════ -->
+<script>
+  /* ─────────────────────────────────────────
+     CONFIGURATION
+     Replace these before deploying.
+  ───────────────────────────────────────── */
+  const CONFIG = {
+    // Your Anthropic API key — MOVE THIS to a serverless function
+    // before going live. Never expose this in a public HTML file.
+    // See /api/generate.js for the Vercel function template.
+    anthropicKey: 'YOUR_ANTHROPIC_API_KEY',
+
+    // Set to true once you wire up /api/generate.js on Vercel.
+    // When false, the site uses fallback messages only.
+    useApi: false,
+
+    // Tax label on the receipt (edit if you localise)
+    taxLabel: 'Tax for Nothing',
+
+    // Currency symbol
+    currency: '$',
+
+    // Site name for footer / meta
+    siteName: 'payfornothing.store',
+  };
+
+  /* ─────────────────────────────────────────
+     STATE
+  ───────────────────────────────────────── */
+  let selectedUnit = 1;
+  let qty = 1;
+
+  /* ─────────────────────────────────────────
+     AMOUNT BUTTONS
+  ───────────────────────────────────────── */
+  document.querySelectorAll('.amt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.amt').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedUnit = parseFloat(btn.dataset.val);
+      document.getElementById('customAmt').value = '';
+      updatePreview();
+    });
+  });
+
+  document.getElementById('customAmt').addEventListener('input', function () {
+    document.querySelectorAll('.amt').forEach(b => b.classList.remove('active'));
+    selectedUnit = parseFloat(this.value) || 0;
+    updatePreview();
+  });
+
+  /* ─────────────────────────────────────────
+     QUANTITY
+  ───────────────────────────────────────── */
+  function changeQty(delta) {
+    qty = Math.max(1, Math.min(99, qty + delta));
+    document.getElementById('qtyVal').textContent = qty;
+    updatePreview();
+  }
+
+  /* ─────────────────────────────────────────
+     PREVIEW TOTAL
+  ───────────────────────────────────────── */
+  function getCalc() {
+    const custom = document.getElementById('customAmt').value;
+    const unit   = custom ? parseFloat(custom) : selectedUnit;
+    const tax    = parseFloat(document.getElementById('taxSelect').value);
+    const sub    = unit * qty;
+    const taxAmt = sub * tax;
+    const total  = sub + taxAmt;
+    const taxPct = Math.round(tax * 100);
+    return { unit, tax, taxPct, sub, taxAmt, total };
+  }
+
+  function updatePreview() {
+    const { unit, total } = getCalc();
+    const c = CONFIG.currency;
+    document.getElementById('previewLabel').textContent =
+      qty > 1 ? `${qty} × ${c}${unit.toFixed(2)} + tax` : `${c}${unit.toFixed(2)} + tax`;
+    document.getElementById('previewTotal').textContent = `${c}${total.toFixed(2)}`;
+  }
+
+  /* ─────────────────────────────────────────
+     PAY HANDLER
+  ───────────────────────────────────────── */
+  async function handlePay() {
+    const name = document.getElementById('nameInput').value.trim() || 'Anonymous';
+    const { unit, tax, taxPct, sub, taxAmt, total } = getCalc();
+
+    if (!unit || unit <= 0) {
+      document.getElementById('customAmt').focus();
+      return;
+    }
+
+    // ── Disable button, show spinner ──
+    const btn = document.getElementById('payBtn');
+    btn.disabled = true;
+    document.getElementById('spinner').style.display = 'block';
+    document.getElementById('btnText').textContent = 'Processing nothing...';
+
+    // ── Populate receipt fields ──
+    const c = CONFIG.currency;
+    document.getElementById('r-name').textContent      = name;
+    document.getElementById('r-qty-label').textContent = `Nothing (×${qty})`;
+    document.getElementById('r-subtotal').textContent  = `${c}${sub.toFixed(2)}`;
+    document.getElementById('r-total').textContent     = `${c}${total.toFixed(2)}`;
+
+    if (tax > 0) {
+      document.getElementById('r-tax-label').textContent = `${CONFIG.taxLabel} (${taxPct}%)`;
+      document.getElementById('r-tax-amt').textContent   = `${c}${taxAmt.toFixed(2)}`;
+      document.getElementById('taxLine').style.display   = 'flex';
+    } else {
+      document.getElementById('taxLine').style.display   = 'none';
+    }
+
+    // ── Show receipt ──
+    document.getElementById('main').style.display = 'none';
+    const receiptEl = document.getElementById('receipt');
+    receiptEl.classList.add('show');
+
+    // ── AI joke ──
+    const jokeEl   = document.getElementById('aiJoke');
+    const creditEl = document.getElementById('aiCredit');
+    jokeEl.className = 'ai-joke loading';
+    jokeEl.textContent = 'one moment...';
+    creditEl.textContent = '';
+
+    const jokeText = CONFIG.useApi
+      ? await fetchAiJoke(name, qty, unit, taxPct, total)
+      : fallback(name, qty, unit, taxPct, total);
+
+    jokeEl.className   = 'ai-joke';
+    jokeEl.textContent = jokeText;
+    creditEl.textContent = '✦ powered by ai';
+
+    // ── Re-enable button ──
+    btn.disabled = false;
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('btnText').textContent = 'Pay for Nothing →';
+  }
+
+  /* ─────────────────────────────────────────
+     AI GENERATION
+     In production, proxy this through
+     /api/generate.js so your key stays safe.
+  ───────────────────────────────────────── */
+  async function fetchAiJoke(name, qty, unit, taxPct, total) {
+    const c = CONFIG.currency;
+    const prompt =
+      `Write a single short, dry, feel-good joke for a receipt on a website called "Pay for Nothing."\n\n` +
+      `Person: "${name}". Bought ${qty} unit${qty > 1 ? 's' : ''} of nothing ` +
+      `at ${c}${unit.toFixed(2)} each` +
+      (taxPct > 0 ? `, plus ${taxPct}% Tax for Nothing, totalling ${c}${total.toFixed(2)}` : '') + `.\n\n` +
+      `Rules:\n` +
+      `- Warm clever compliment — they're a good sport\n` +
+      `- 1–2 sentences max, punchy\n` +
+      `- Use their name once\n` +
+      `- If qty > 1, acknowledge the ambition of buying multiple nothings\n` +
+      `- If tax > 0, optionally note the absurdity of paying tax on nothing\n` +
+      `- Deadpan, no exclamation marks\n` +
+      `- Unexpected, quiet ending\n\n` +
+      `Reply with ONLY the joke. No quotes, no labels.`;
+
+    try {
+      // In production: replace this URL with '/api/generate'
+      // and handle the key server-side (see api/generate.js)
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': CONFIG.anthropicKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 120,
+          messages: [{ role: 'user', content: prompt }],
+        }),
+      });
+      const data = await res.json();
+      return data.content?.[0]?.text?.trim() || fallback(name, qty, unit, taxPct, total);
+    } catch (e) {
+      return fallback(name, qty, unit, taxPct, total);
+    }
+  }
+
+  /* ─────────────────────────────────────────
+     FALLBACK MESSAGES
+     Used when API is off or fails.
+     Rotate from a large pool.
+  ───────────────────────────────────────── */
+  function fallback(name, qty, unit, taxPct, total) {
+    const c = CONFIG.currency;
+
+    const single = [
+      `Not everyone has the courage to invest in nothing, ${name}. You do.`,
+      `${name} gets it.`,
+      `${name} saw nothing and said yes. Respect.`,
+      `Most people need something. ${name} is not most people.`,
+      `${name}, you just paid for nothing. Honestly, that's the most self-aware purchase we've seen all day.`,
+      `We've reviewed your transaction, ${name}. Everything appears to be in order. Nothing has been delivered.`,
+      `${name} didn't hesitate. That tells us a lot.`,
+      `Somewhere, a philosopher is nodding, ${name}.`,
+      `${name}, you understood the assignment. There was no assignment.`,
+      `We admire you, ${name}. We truly do.`,
+    ];
+
+    const multi = [
+      `${name} bought ${qty} nothings. We don't know what they're planning. We respect it.`,
+      `Most people settle for one nothing, ${name}. You ordered ${qty}. That's vision.`,
+      `${name} has ${qty} nothings now. The collection grows.`,
+      `${qty} units of nothing, ${name}. Bold. We have no further comment.`,
+      `${name} is either building something, or very committed to the bit. Either way: ${qty} nothings delivered.`,
+    ];
+
+    const withTax = [
+      `${name} paid ${c}${total.toFixed(2)} for nothing, including ${taxPct}% tax. The government thanks you. For nothing.`,
+      `${taxPct}% tax on nothing, ${name}. Even the void is not exempt. You're a model citizen.`,
+      `${name}, you paid tax on nothing. That is the most legal thing anyone has ever done here.`,
+    ];
+
+    let pool = qty > 1 ? multi : single;
+    if (taxPct > 0 && Math.random() > 0.5) pool = withTax;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  /* ─────────────────────────────────────────
+     RESET
+  ───────────────────────────────────────── */
+  function reset() {
+    document.getElementById('receipt').classList.remove('show');
+    document.getElementById('main').style.display = 'block';
+    document.getElementById('nameInput').value = '';
+    document.getElementById('customAmt').value = '';
+    document.querySelectorAll('.amt').forEach(b => b.classList.remove('active'));
+    document.querySelector('.amt[data-val="1"]').classList.add('active');
+    selectedUnit = 1;
+    qty = 1;
+    document.getElementById('qtyVal').textContent = '1';
+    updatePreview();
+  }
+
+  // ── Init ──
+  updatePreview();
+</script>
+
+</body>
+</html>
