@@ -13,6 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://assets.lemonsqueezy.com/lemon.js" defer></script>
   <style>
     :root {
       --bg:       #0d0c0b;
@@ -501,9 +502,13 @@
   const CONFIG = {
     anthropicKey: 'YOUR_ANTHROPIC_API_KEY',
     useApi: true,
+    lsCheckoutUrl: 'https://payfornothing.lemonsqueezy.com/checkout/buy/523dafe1-d426-437f-8941-1360cd062693',
     taxLabel: 'Tax for Nothing',
     currency: '$',
   };
+
+  // Stash form state for use after LS payment success
+  let _pendingName = '', _pendingQty = 1, _pendingUnit = 1, _pendingTaxPct = 0, _pendingSub = 0, _pendingTaxAmt = 0, _pendingTotal = 0;
 
   let selectedUnit = 1, qty = 1;
 
@@ -548,23 +553,48 @@
     document.getElementById('previewTotal').textContent = `${c}${total.toFixed(2)}`;
   }
 
-  async function handlePay() {
+  function handlePay() {
     const name = document.getElementById('nameInput').value.trim() || 'Anonymous';
     const { unit, tax, taxPct, sub, taxAmt, total } = getCalc();
     if (!unit || unit <= 0) { document.getElementById('customAmt').focus(); return; }
 
-    const btn = document.getElementById('payBtn');
-    btn.disabled = true;
-    document.getElementById('spinner').style.display = 'block';
-    document.getElementById('btnText').textContent = 'Processing nothing...';
+    // Stash for receipt after payment
+    _pendingName = name;
+    _pendingQty = qty;
+    _pendingUnit = unit;
+    _pendingTaxPct = taxPct;
+    _pendingSub = sub;
+    _pendingTaxAmt = taxAmt;
+    _pendingTotal = total;
 
-    const c = CONFIG.currency;
+    // Build LemonSqueezy checkout URL
+    // custom_price is in cents (total including our display tax)
+    const priceCents = Math.round(total * 100);
+    const url = new URL(CONFIG.lsCheckoutUrl);
+    url.searchParams.set('checkout[custom_price]', priceCents);
+    url.searchParams.set('checkout[name]', name);
+    url.searchParams.set('media', '0');
+    url.searchParams.set('logo', '0');
+
+    // Open LemonSqueezy overlay
+    window.LemonSqueezy.Url.Open(url.toString());
+  }
+
+  async function showReceipt() {
+    const name    = _pendingName;
+    const unit    = _pendingUnit;
+    const taxPct  = _pendingTaxPct;
+    const sub     = _pendingSub;
+    const taxAmt  = _pendingTaxAmt;
+    const total   = _pendingTotal;
+    const c       = CONFIG.currency;
+
     document.getElementById('r-name').textContent      = name;
-    document.getElementById('r-qty-label').textContent = `Nothing (×${qty})`;
+    document.getElementById('r-qty-label').textContent = `Nothing (×${_pendingQty})`;
     document.getElementById('r-subtotal').textContent  = `${c}${sub.toFixed(2)}`;
     document.getElementById('r-total').textContent     = `${c}${total.toFixed(2)}`;
 
-    if (tax > 0) {
+    if (taxPct > 0) {
       document.getElementById('r-tax-label').textContent = `${CONFIG.taxLabel} (${taxPct}%)`;
       document.getElementById('r-tax-amt').textContent   = `${c}${taxAmt.toFixed(2)}`;
       document.getElementById('taxLine').style.display   = 'flex';
@@ -572,10 +602,8 @@
       document.getElementById('taxLine').style.display = 'none';
     }
 
-    // Generate receipt number from timestamp
     const rNum = String(Date.now()).slice(-6);
-    const rFormatted = '#' + rNum.padStart(6, '0');
-    document.getElementById('r-number').textContent = 'Receipt ' + rFormatted;
+    document.getElementById('r-number').textContent = 'Receipt #' + rNum.padStart(6, '0');
     document.getElementById('main').style.display = 'none';
     document.getElementById('receipt').classList.add('show');
 
@@ -586,17 +614,28 @@
     creditEl.textContent = '';
 
     const jokeText = CONFIG.useApi
-      ? await fetchAiJoke(name, qty, unit, taxPct, total)
-      : fallback(name, qty, unit, taxPct, total);
+      ? await fetchAiJoke(name, _pendingQty, unit, taxPct, total)
+      : fallback(name, _pendingQty, unit, taxPct, total);
 
     jokeEl.className   = 'ai-joke';
     jokeEl.textContent = jokeText;
     creditEl.textContent = '✦ powered by ai';
-
-    btn.disabled = false;
-    document.getElementById('spinner').style.display = 'none';
-    document.getElementById('btnText').textContent = 'Pay for Nothing →';
   }
+
+  // Init LemonSqueezy and listen for payment success
+  window.addEventListener('load', () => {
+    if (window.createLemonSqueezy) {
+      window.createLemonSqueezy();
+      window.LemonSqueezy.Setup({
+        eventHandler: (event) => {
+          if (event.event === 'Checkout.Success') {
+            window.LemonSqueezy.Url.Close();
+            showReceipt();
+          }
+        }
+      });
+    }
+  });
 
   async function fetchAiJoke(name, qty, unit, taxPct, total) {
     const c = CONFIG.currency;
@@ -624,6 +663,18 @@
       `Somewhere, a philosopher is nodding, ${name}.`,
       `${name}, you understood the assignment. There was no assignment.`,
       `We admire you, ${name}. We truly do.`,
+      `${name} is, statistically, one of the more interesting people to visit this site.`,
+      `We have nothing to say about ${name}'s decision. That is intentional.`,
+      `${name} paid ${c}${unit.toFixed(2)} for nothing. The economy is fine.`,
+      `${name} could have bought coffee. ${name} chose this. We're not judging.`,
+      `There is a version of ${name} who didn't do this. That version is less interesting.`,
+      `${name} has now officially participated. In what, exactly, remains unclear.`,
+      `We don't know what ${name} was looking for. We hope this wasn't it.`,
+      `${name}. Good name. Good decision. Objectively neither of those is true. Yet here we are.`,
+      `The transaction is complete, ${name}. The void acknowledges you.`,
+      `${name} came, paid, and received nothing. A perfect arc.`,
+      `We ran ${name}'s decision through several models. All of them said nothing.`,
+      `${name} is exactly the kind of person this was made for. We're still not sure what kind that is.`,
     ];
     const multi = [
       `${name} bought ${qty} nothings. We don't know what they're planning. We respect it.`,
@@ -631,11 +682,19 @@
       `${name} has ${qty} nothings now. The collection grows.`,
       `${qty} units of nothing, ${name}. Bold. We have no further comment.`,
       `${name} is either building something, or very committed to the bit. Either way: ${qty} nothings delivered.`,
+      `${qty} nothings for ${name}. We didn't ask why. We still won't.`,
+      `${name} bulk-purchased nothing. There's a word for that. We don't know what it is.`,
+      `${qty} is a specific number, ${name}. It implies a plan. We hope there isn't one.`,
+      `${name} now owns ${qty} certified nothings. The estate value is unchanged.`,
+      `We've processed larger orders, ${name}. Actually, we haven't.`,
     ];
     const withTax = [
       `${name} paid ${c}${total.toFixed(2)} for nothing, including ${taxPct}% tax. The government thanks you. For nothing.`,
       `${taxPct}% tax on nothing, ${name}. Even the void is not exempt. You're a model citizen.`,
       `${name}, you paid tax on nothing. That is the most legal thing anyone has ever done here.`,
+      `${c}${total.toFixed(2)} total, ${name}. ${taxPct}% of that went to the state. For nothing. Democracy is working.`,
+      `${name} paid a ${taxPct}% surcharge on the absence of a product. The tax code did not anticipate this.`,
+      `The government will receive ${c}${(total - total/(1+taxPct/100)).toFixed(2)} of your nothing payment, ${name}. Spend it wisely, presumably.`,
     ];
     let pool = qty > 1 ? multi : single;
     if (taxPct > 0 && Math.random() > 0.5) pool = withTax;
