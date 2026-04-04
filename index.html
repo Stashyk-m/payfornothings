@@ -203,7 +203,12 @@
     .rcpt-moto {
       font-size: 9px; letter-spacing: 0.22em;
       color: var(--text3); text-align: center;
-      margin-bottom: 1.75rem; text-transform: lowercase;
+      margin-bottom: 0.5rem; text-transform: lowercase;
+    }
+    .rcpt-number {
+      font-size: 9px; letter-spacing: 0.2em;
+      color: var(--ghost); text-align: center;
+      margin-bottom: 1.75rem; text-transform: uppercase;
     }
     .rcpt-row {
       display: flex; justify-content: space-between;
@@ -444,9 +449,10 @@
 
   <!-- RECEIPT -->
   <div class="receipt" id="receipt">
-    <div id="receiptCard">
+    <div id="receiptCard" style="padding: 1.75rem;">
       <p class="rcpt-brand">nothing, inc.</p>
       <p class="rcpt-moto">nothing. now with ai.</p>
+      <p class="rcpt-number" id="r-number">Receipt #—</p>
       <div class="rcpt-row"><span>Item</span><span>Nothing</span></div>
       <div class="rcpt-row"><span>Recipient</span><span id="r-name">—</span></div>
       <div class="rcpt-row"><span>Description</span><span>—</span></div>
@@ -566,6 +572,10 @@
       document.getElementById('taxLine').style.display = 'none';
     }
 
+    // Generate receipt number from timestamp
+    const rNum = String(Date.now()).slice(-6);
+    const rFormatted = '#' + rNum.padStart(6, '0');
+    document.getElementById('r-number').textContent = 'Receipt ' + rFormatted;
     document.getElementById('main').style.display = 'none';
     document.getElementById('receipt').classList.add('show');
 
@@ -638,15 +648,24 @@
     btn.disabled = true;
     try {
       const card = document.getElementById('receiptCard');
-      const canvas = await html2canvas(card, {
+      // Wrap in padded container for clean margins on export
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = 'background:#161513;padding:32px;display:inline-block;';
+      const clone = card.cloneNode(true);
+      wrapper.appendChild(clone);
+      document.body.appendChild(wrapper);
+      const canvas = await html2canvas(wrapper, {
         backgroundColor: '#161513',
         scale: 2, useCORS: true, logging: false,
       });
+      document.body.removeChild(wrapper);
+      const rnum = document.getElementById('r-number').textContent;
+      const slug = rnum.replace(/[^0-9]/g,'') || 'receipt';
       const link = document.createElement('a');
-      link.download = 'payfornothing-receipt.png';
+      link.download = `nothing-inc-${slug}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
-    } catch { alert('Download failed — try a screenshot instead.'); }
+    } catch (e) { alert('Download failed — try a screenshot instead.'); }
     btn.textContent = 'Download receipt ↓';
     btn.disabled = false;
   }
